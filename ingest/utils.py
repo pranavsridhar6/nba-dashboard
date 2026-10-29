@@ -4,7 +4,7 @@ import time
 
 import pandas as pd
 
-from config import DATA_DIR, SEASON
+from config import DATA_DIR, CURRENT_SEASON
 
 
 def call_with_retry(fn, tries=3, wait=5):
@@ -19,11 +19,16 @@ def call_with_retry(fn, tries=3, wait=5):
             time.sleep(wait)
 
 
-def table_path(table, filename, season=SEASON):
+def table_path(table, filename, season):
     """Build data/<table>/season=<season>/<filename> and create the folder if needed."""
     folder = os.path.join(DATA_DIR, table, f"season={season}")
     os.makedirs(folder, exist_ok=True)
     return os.path.join(folder, filename)
+
+
+def already_done(path, season):
+    """True if this is a finished season and its file already exists, so we can skip the API."""
+    return season != CURRENT_SEASON and os.path.exists(path)
 
 
 def minutes_to_decimal(value):

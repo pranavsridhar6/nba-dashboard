@@ -2,7 +2,9 @@
 
 TEAM_ID = 1610612755          # Philadelphia 76ers
 TEAM_ABBR = "PHI"
-SEASON = "2023-24"
+
+SEASONS = ["2023-24", "2024-25", "2025-26", "2026-27"]
+CURRENT_SEASON = "2026-27"    # in progress: always re-pulled. Finished seasons are pulled once.
 SEASON_TYPES = ["Regular Season", "Playoffs"]
 
 DATA_DIR = "data"             # relative to the project root, so run scripts from the root
