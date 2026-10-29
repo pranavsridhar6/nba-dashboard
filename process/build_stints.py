@@ -123,12 +123,18 @@ def build_game(gid, g, roster, season):
     for r in roster.itertuples(index=False):
         by_team[r.team_id].append((r.player_id, norm(r.first_name or ""), norm(base_last(r.last_name))))
 
-    def unique(ids):
-        ids = set(ids)
-        return next(iter(ids)) if len(ids) == 1 else None
+    played = dict(zip(roster["player_id"], roster["did_play"]))
 
-    def resolve(team, name):
-        """Match a substitution name to a player id, strictest rule first."""
+    def resolve(team, name, exclude=frozenset()):
+        """Match a substitution name to a player id, strictest rule first.
+        exclude = players who can't be the one coming in (already on court, or the one leaving)."""
+        def unique(ids):
+            ids = set(ids)
+            if len(ids) > 1:
+                # Two players share the name: drop anyone already on court or who never played
+                ids = {i for i in ids if i not in exclude and played.get(i, True)}
+            return next(iter(ids)) if len(ids) == 1 else None
+
         # a) exact: last name, initial + last, full name (with and without Jr./III)
         found = unique(keys.get((team, norm(name)), set()))
         if found is not None:
@@ -233,7 +239,7 @@ def build_game(gid, g, roster, season):
                                        detail=r.description))
                 else:
                     on[team].discard(out_id)
-                    in_id = resolve(team, m.group(1))
+                    in_id = resolve(team, m.group(1), exclude=frozenset(on[team] | {out_id}))
                     if in_id is None:
                         issues.append(dict(game_id=gid, period=period, problem="unmatched name",
                                            detail=m.group(1)))
