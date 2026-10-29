@@ -1,4 +1,6 @@
 """Checks the tables agree with each other, per season. Rerun after every refresh."""
+import os
+
 import pandas as pd
 
 from config import TEAM_ID, SEASONS, CURRENT_SEASON
@@ -69,5 +71,18 @@ for season in SEASONS:
 
         upcoming = (sched["game_status"] == "Scheduled").sum()
         print(f"  INFO  {upcoming} upcoming games")
+
+    # 6. Stints: 76ers points per game add up, and lineups are almost always complete
+    stints_path = table_path("stints", "stints.parquet", season)
+    if os.path.exists(stints_path):
+        st = pd.read_parquet(stints_path)
+        st["phi_pts"] = st["home_pts"].where(st["home_team_id"] == TEAM_ID, st["away_pts"])
+        sp = games.set_index("GAME_ID")[["PTS"]].join(st.groupby("game_id")["phi_pts"].sum())
+        bad = sp[sp["PTS"] != sp["phi_pts"]]
+        check("stint points = 76ers points", bad.empty, f"({len(bad)} mismatched games)")
+        full = st["lineup_complete"].mean()
+        check("stints with full 5-on-5 lineup >= 97%", full >= 0.97, f"({full:.1%})")
+    else:
+        print("  INFO  no stints yet (run process/build_stints.py)")
 
 print(f"\n{sum(results)}/{len(results)} checks passed")
