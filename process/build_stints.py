@@ -159,6 +159,19 @@ def build_game(gid, g, roster, season):
             return unique(p for p, f, l in players if l == close[0])
         return None
 
+    def same_last_name(team, name, exclude):
+        """Everyone on the team with this last name who played and isn't excluded."""
+        target = norm(base_last(re.sub(r"^\s*[A-Za-z]+\.\s+", "", str(name))))
+        return {p for p, f, l in by_team.get(team, [])
+                if l == target and p not in exclude and played.get(p, True)}
+
+    def lookahead(candidates, rows, idx):
+        """Two players share the name: whichever shows up first in later events was the one who came in."""
+        for r in rows[idx + 1:]:
+            if r.personId in candidates:
+                return r.personId
+        return None
+
     home = find_home_team(g, team_of, teams)
     away = [t for t in teams if t != home][0]
     side = {home: "home", away: "away"}
@@ -229,7 +242,7 @@ def build_game(gid, g, roster, season):
         last_sub_t = None
         last_miss = None                                  # (team, live_ball) of the last miss
 
-        for r in rows:
+        for idx, r in enumerate(rows):
             if r.actionType == "Substitution":
                 out_id = r.personId
                 team = team_of.get(out_id)
@@ -239,7 +252,12 @@ def build_game(gid, g, roster, season):
                                        detail=r.description))
                 else:
                     on[team].discard(out_id)
-                    in_id = resolve(team, m.group(1), exclude=frozenset(on[team] | {out_id}))
+                    excl = frozenset(on[team] | {out_id})
+                    in_id = resolve(team, m.group(1), exclude=excl)
+                    if in_id is None:
+                        cands = same_last_name(team, m.group(1), excl)
+                        if len(cands) > 1:
+                            in_id = lookahead(cands, rows, idx)
                     if in_id is None:
                         issues.append(dict(game_id=gid, period=period, problem="unmatched name",
                                            detail=m.group(1)))
@@ -302,9 +320,16 @@ def prepare_pbp(pbp):
 
 
 def main():
+    # python process/build_stints.py           -> 76ers tables
+    # python process/build_stints.py --league  -> league-wide tables (data/league/...)
+    prefix = "league/" if "--league" in sys.argv else ""
     for season in SEASONS:
-        pbp = prepare_pbp(pd.read_parquet(table_path("pbp", "pbp.parquet", season)))
-        box = pd.read_parquet(table_path("player_box", "player_box.parquet", season))
+        pbp_path = table_path(prefix + "pbp", "pbp.parquet", season)
+        if not os.path.exists(pbp_path):
+            print(f"{season}: no play-by-play at {pbp_path}, skipping")
+            continue
+        pbp = prepare_pbp(pd.read_parquet(pbp_path))
+        box = pd.read_parquet(table_path(prefix + "player_box", "player_box.parquet", season))
 
         all_stints, all_periods, all_issues, checks = [], [], [], []
         for gid, g in pbp.groupby("game_id", sort=False):
@@ -331,11 +356,12 @@ def main():
             ))
 
         stints = pd.DataFrame(all_stints)
-        out = table_path("stints", "stints.parquet", season)
+        out = table_path(prefix + "stints", "stints.parquet", season)
         stints.to_parquet(out, index=False)
-        pd.DataFrame(all_periods).to_parquet(table_path("stints", "period_starters.parquet", season), index=False)
+        pd.DataFrame(checks).to_parquet(table_path(prefix + "stints", "game_checks.parquet", season), index=False)
+        pd.DataFrame(all_periods).to_parquet(table_path(prefix + "stints", "period_starters.parquet", season), index=False)
         pd.DataFrame(all_issues, columns=["game_id", "period", "problem", "detail"]).to_parquet(
-            table_path("stints", "issues.parquet", season), index=False)
+            table_path(prefix + "stints", "issues.parquet", season), index=False)
 
         # ---------- summary ----------
         chk = pd.DataFrame(checks)
