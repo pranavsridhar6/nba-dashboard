@@ -187,6 +187,7 @@ def build_game(gid, g, roster, season):
 
     for period, prows in g.groupby("period", sort=True):
         rows = list(prows.itertuples(index=False))
+        row_ids = prows.index.to_list()                 # row number within the game
 
         # --- who starts this period ---
         if period == 1 and all(len(box_starters[t]) == 5 for t in (home, away)):
@@ -208,12 +209,12 @@ def build_game(gid, g, roster, season):
                 period_log.append(dict(game_id=gid, period=period, team_id=t, n=len(s), method=method))
 
         # --- walk the period ---
-        def new_stint(start_t, sh, sa):
+        def new_stint(start_t, sh, sa, start_row):
             return dict(lineup={t: frozenset(on[t]) for t in (home, away)},
-                        start_t=start_t, start_sh=sh, start_sa=sa,
+                        start_t=start_t, start_sh=sh, start_sa=sa, start_row=start_row,
                         **{f"{s}_{k}": 0 for s in ("home", "away") for k in ("fga", "fta", "tov", "oreb")})
 
-        def close(st, end_t, end_sh, end_sa):
+        def close(st, end_t, end_sh, end_sa, end_row):
             seconds = end_t - st["start_t"]
             pts_h, pts_a = end_sh - st["start_sh"], end_sa - st["start_sa"]
             counts = sum(st[f"{s}_{k}"] for s in ("home", "away") for k in ("fga", "fta", "tov"))
@@ -222,6 +223,7 @@ def build_game(gid, g, roster, season):
             rec = dict(game_id=gid, season=season, period=period,
                        home_team_id=home, away_team_id=away,
                        start_t=st["start_t"], end_t=end_t, seconds=seconds,
+                       start_row=st["start_row"], end_row=end_row,
                        home_margin_start=st["start_sh"] - st["start_sa"],
                        home_pts=pts_h, away_pts=pts_a)
             for s, t in (("home", home), ("away", away)):
@@ -238,7 +240,7 @@ def build_game(gid, g, roster, season):
             stints.append(rec)
 
         prev_sh, prev_sa = rows[0].sh, rows[0].sa
-        cur = new_stint(period_offset(period), prev_sh, prev_sa)
+        cur = new_stint(period_offset(period), prev_sh, prev_sa, row_ids[0])
         last_sub_t = None
         last_miss = None                                  # (team, live_ball) of the last miss
 
@@ -269,8 +271,8 @@ def build_game(gid, g, roster, season):
 
             # A non-sub event: if subs changed the lineup, close the old stint first
             if any(frozenset(on[t]) != cur["lineup"][t] for t in (home, away)):
-                close(cur, last_sub_t, prev_sh, prev_sa)
-                cur = new_stint(last_sub_t, prev_sh, prev_sa)
+                close(cur, last_sub_t, prev_sh, prev_sa, row_ids[idx] - 1)
+                cur = new_stint(last_sub_t, prev_sh, prev_sa, row_ids[idx])
 
             # Which team does this event belong to?
             team = team_of.get(r.personId)
@@ -301,7 +303,7 @@ def build_game(gid, g, roster, season):
 
             prev_sh, prev_sa = r.sh, r.sa
 
-        close(cur, period_offset(period) + period_length(period), prev_sh, prev_sa)
+        close(cur, period_offset(period) + period_length(period), prev_sh, prev_sa, row_ids[-1])
         prev_end = {t: set(on[t]) for t in (home, away)}
 
     return stints, period_log, issues
