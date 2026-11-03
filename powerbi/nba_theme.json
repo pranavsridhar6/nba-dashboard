@@ -1,0 +1,39 @@
+{
+  "name": "NBA Front Office",
+  "dataColors": ["#006BB6", "#ED174C", "#002B5C", "#8A96A3", "#16A34A", "#F59E0B", "#7C3AED", "#0EA5E9"],
+  "background": "#FFFFFF",
+  "foreground": "#111827",
+  "tableAccent": "#006BB6",
+  "good": "#16A34A",
+  "bad": "#DC2626",
+  "neutral": "#8A96A3",
+  "textClasses": {
+    "callout": { "fontSize": 28, "fontFace": "Segoe UI Semibold", "color": "#111827" },
+    "title":   { "fontSize": 12, "fontFace": "Segoe UI Semibold", "color": "#111827" },
+    "header":  { "fontSize": 11, "fontFace": "Segoe UI Semibold", "color": "#374151" },
+    "label":   { "fontSize": 10, "fontFace": "Segoe UI", "color": "#4B5563" }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [{ "show": true, "color": { "solid": { "color": "#FFFFFF" } }, "transparency": 0 }],
+        "border": [{ "show": true, "color": { "solid": { "color": "#E5E7EB" } }, "radius": 8 }],
+        "dropShadow": [{ "show": false }],
+        "title": [{ "show": true, "fontColor": { "solid": { "color": "#111827" } }, "fontSize": 12, "fontFamily": "Segoe UI Semibold" }]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [{ "color": { "solid": { "color": "#F3F4F6" } }, "transparency": 0 }]
+      }
+    },
+    "tableEx": {
+      "*": {
+        "grid": [{ "gridHorizontal": true, "gridHorizontalColor": { "solid": { "color": "#E5E7EB" } }, "gridVertical": false, "rowPadding": 4 }],
+        "columnHeaders": [{ "fontColor": { "solid": { "color": "#374151" } }, "backColor": { "solid": { "color": "#F9FAFB" } }, "fontFamily": "Segoe UI Semibold" }],
+        "values": [{ "fontColorPrimary": { "solid": { "color": "#111827" } }, "backColorPrimary": { "solid": { "color": "#FFFFFF" } }, "backColorSecondary": { "solid": { "color": "#FFFFFF" } } }],
+        "total": [{ "totals": false }]
+      }
+    }
+  }
+}
