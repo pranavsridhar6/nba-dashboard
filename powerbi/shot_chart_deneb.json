@@ -1,0 +1,435 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {
+    "name": "dataset"
+  },
+  "width": "container",
+  "height": "container",
+  "layer": [
+    {
+      "transform": [
+        {
+          "filter": "datum['Shot View'] == 'Heat map'"
+        },
+        {
+          "filter": "datum.y_ft <= 42"
+        }
+      ],
+      "mark": {
+        "type": "rect"
+      },
+      "encoding": {
+        "x": {
+          "field": "x_ft",
+          "type": "quantitative",
+          "bin": {
+            "step": 3
+          },
+          "scale": {
+            "domain": [
+              -25,
+              25
+            ]
+          },
+          "axis": null
+        },
+        "y": {
+          "field": "y_ft",
+          "type": "quantitative",
+          "bin": {
+            "step": 3
+          },
+          "scale": {
+            "domain": [
+              -4.75,
+              42.25
+            ]
+          },
+          "axis": null
+        },
+        "color": {
+          "aggregate": "mean",
+          "field": "SHOT_MADE_FLAG",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              0.5,
+              1
+            ],
+            "range": [
+              "#DC2626",
+              "#FACC15",
+              "#16A34A"
+            ]
+          },
+          "legend": {
+            "title": "FG%",
+            "format": ".0%",
+            "orient": "bottom",
+            "direction": "horizontal",
+            "gradientLength": 160
+          }
+        },
+        "tooltip": [
+          {
+            "aggregate": "count",
+            "type": "quantitative",
+            "title": "Shots"
+          },
+          {
+            "aggregate": "sum",
+            "field": "SHOT_MADE_FLAG",
+            "type": "quantitative",
+            "title": "Made"
+          },
+          {
+            "aggregate": "mean",
+            "field": "SHOT_MADE_FLAG",
+            "type": "quantitative",
+            "title": "FG%",
+            "format": ".0%"
+          }
+        ],
+        "opacity": {
+          "aggregate": "count",
+          "type": "quantitative",
+          "scale": {
+            "range": [
+              0.35,
+              0.95
+            ]
+          },
+          "legend": null
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "x": -25,
+            "x2": 25,
+            "y": -4.75,
+            "y2": 42.25
+          },
+          {
+            "x": -8,
+            "x2": 8,
+            "y": -4.75,
+            "y2": 14.25
+          },
+          {
+            "x": -6,
+            "x2": 6,
+            "y": -4.75,
+            "y2": 14.25
+          }
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "fill": "transparent",
+        "stroke": "#9CA3AF",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -25,
+              25
+            ]
+          },
+          "axis": null
+        },
+        "x2": {
+          "field": "x2"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -4.75,
+              42.25
+            ]
+          },
+          "axis": null
+        },
+        "y2": {
+          "field": "y2"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "x": -3,
+            "y": -0.75,
+            "x2": 3,
+            "y2": -0.75
+          },
+          {
+            "x": -22,
+            "y": -4.75,
+            "x2": -22,
+            "y2": 8.95
+          },
+          {
+            "x": 22,
+            "y": -4.75,
+            "x2": 22,
+            "y2": 8.95
+          }
+        ]
+      },
+      "mark": {
+        "type": "rule",
+        "stroke": "#9CA3AF",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative"
+        },
+        "x2": {
+          "field": "x2"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative"
+        },
+        "y2": {
+          "field": "y2"
+        }
+      }
+    },
+    {
+      "data": {
+        "sequence": {
+          "start": 22,
+          "stop": 159,
+          "as": "d"
+        }
+      },
+      "transform": [
+        {
+          "calculate": "23.75 * cos(datum.d * PI / 180)",
+          "as": "x"
+        },
+        {
+          "calculate": "23.75 * sin(datum.d * PI / 180)",
+          "as": "y"
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "stroke": "#9CA3AF",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative"
+        },
+        "order": {
+          "field": "d"
+        }
+      }
+    },
+    {
+      "data": {
+        "sequence": {
+          "start": 0,
+          "stop": 181,
+          "as": "d"
+        }
+      },
+      "transform": [
+        {
+          "calculate": "6 * cos(datum.d * PI / 180)",
+          "as": "x"
+        },
+        {
+          "calculate": "14.25 + 6 * sin(datum.d * PI / 180)",
+          "as": "y"
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "stroke": "#9CA3AF",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative"
+        },
+        "order": {
+          "field": "d"
+        }
+      }
+    },
+    {
+      "data": {
+        "sequence": {
+          "start": 0,
+          "stop": 181,
+          "as": "d"
+        }
+      },
+      "transform": [
+        {
+          "calculate": "4 * cos(datum.d * PI / 180)",
+          "as": "x"
+        },
+        {
+          "calculate": "4 * sin(datum.d * PI / 180)",
+          "as": "y"
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "stroke": "#9CA3AF",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative"
+        },
+        "order": {
+          "field": "d"
+        }
+      }
+    },
+    {
+      "data": {
+        "sequence": {
+          "start": 0,
+          "stop": 361,
+          "as": "d"
+        }
+      },
+      "transform": [
+        {
+          "calculate": "0.75 * cos(datum.d * PI / 180)",
+          "as": "x"
+        },
+        {
+          "calculate": "0.75 * sin(datum.d * PI / 180)",
+          "as": "y"
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "stroke": "#ED174C",
+        "strokeWidth": 1.5
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative"
+        },
+        "order": {
+          "field": "d"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": "datum['Shot View'] != 'Heat map'"
+        },
+        {
+          "filter": "datum.y_ft <= 42"
+        }
+      ],
+      "mark": {
+        "type": "circle",
+        "size": 70,
+        "opacity": 0.85,
+        "stroke": "white",
+        "strokeWidth": 0.5
+      },
+      "encoding": {
+        "x": {
+          "field": "x_ft",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "y_ft",
+          "type": "quantitative"
+        },
+        "color": {
+          "field": "SHOT_MADE_FLAG",
+          "type": "nominal",
+          "scale": {
+            "domain": [
+              1,
+              0
+            ],
+            "range": [
+              "#16A34A",
+              "#DC2626"
+            ]
+          },
+          "legend": {
+            "title": null,
+            "orient": "bottom",
+            "labelExpr": "datum.value == 1 ? 'Made' : 'Missed'"
+          }
+        },
+        "tooltip": [
+          {
+            "field": "PLAYER_NAME",
+            "title": "Player"
+          },
+          {
+            "field": "ACTION_TYPE",
+            "title": "Shot"
+          },
+          {
+            "field": "SHOT_DISTANCE",
+            "title": "Distance (ft)"
+          }
+        ]
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  },
+  "resolve": {
+    "scale": {
+      "color": "independent",
+      "opacity": "independent"
+    },
+    "legend": {
+      "color": "independent"
+    }
+  }
+}
