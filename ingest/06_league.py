@@ -60,16 +60,26 @@ def fetch_games(season):
     df["GAME_ID"] = df["GAME_ID"].astype(str).str.zfill(10)
     df = df[df["GAME_ID"].str[:3].isin(["002", "004"])]          # regular season + playoffs only
 
+    # Pair the two team rows of each game. Normally one row says "vs." (home) and one "@" (away).
+    # Neutral-site games (international games, NBA Cup semifinals) break that pattern, so we
+    # never drop a game: if both rows look alike, the first row is treated as the home team.
     cols = ["GAME_ID", "TEAM_ID", "TEAM_ABBREVIATION", "PTS"]
-    home = df[df["MATCHUP"].str.contains("vs.")][cols + ["GAME_DATE", "season_type"]]
-    away = df[df["MATCHUP"].str.contains("@")][cols]
+    df["is_home_row"] = df["MATCHUP"].str.contains("vs.")
+    df = df.sort_values(["GAME_ID", "is_home_row"], ascending=[True, False])
+    pairs = df.groupby("GAME_ID")
+    home = pairs.nth(0)[cols + ["GAME_DATE", "season_type", "is_home_row"]]
+    away = pairs.nth(1)[cols + ["is_home_row"]]
     games = home.merge(away, on="GAME_ID", suffixes=("_home", "_away"))
+    games["neutral_site"] = games["is_home_row_home"] == games["is_home_row_away"]
+    games = games.drop(columns=["is_home_row_home", "is_home_row_away"])
     games = games.rename(columns={
         "GAME_ID": "game_id", "GAME_DATE": "game_date",
         "TEAM_ID_home": "home_team_id", "TEAM_ABBREVIATION_home": "home_team", "PTS_home": "home_pts",
         "TEAM_ID_away": "away_team_id", "TEAM_ABBREVIATION_away": "away_team", "PTS_away": "away_pts",
     })
     games["game_date"] = pd.to_datetime(games["game_date"])
+    reg = (games["season_type"] == "Regular Season").sum()
+    print(f"  {reg} regular season games ({games['neutral_site'].sum()} neutral site)")
     games["season"] = season
     return games.drop_duplicates("game_id").sort_values("game_date").reset_index(drop=True)
 
