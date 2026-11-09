@@ -143,6 +143,15 @@ def main():
         combo = combos(phi, names)
         combo.to_parquet(table_path("lineups", "lineup_combos.parquet", season), index=False)
 
+        # Helper for Power BI: one row per player per lineup, so a measure can check
+        # that EVERY picked player is in a lineup (slicers alone give "any of")
+        cp = combo[["combo_key", "size"]].drop_duplicates()
+        cp = cp.assign(player_id=cp["combo_key"].str.split("-")).explode("player_id")
+        cp["player_id"] = cp["player_id"].astype(int)
+        cp["player_name"] = cp["player_id"].map(names)
+        cp["season"] = season
+        cp.to_parquet(table_path("lineups", "lineup_combo_players.parquet", season), index=False)
+
         # ---------- summary ----------
         mins = phi["seconds"].sum() / 60
         g_mins = phi.loc[phi["garbage"], "seconds"].sum() / 60
