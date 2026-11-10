@@ -131,9 +131,23 @@ def parse_team(abbr, html):
     holds = tables[1].copy() if len(tables) > 1 else pd.DataFrame()
     if not holds.empty:
         holds.insert(0, "team", abbr)
-    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
-    m = re.search(r"total salary\s*\$\s*([\d,]+)", text, re.IGNORECASE)
-    return pd.DataFrame(rows), holds, (money(m.group(1)) if m else None), unknown
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " | ", html))
+    m = re.search(r"total salary[\s|]*\$\s*([\d,]+)", text, re.IGNORECASE)
+    return pd.DataFrame(rows), holds, (money(m.group(1)) if m else None), unknown, parse_exceptions(abbr, text)
+
+
+def parse_exceptions(abbr, text):
+    """The team's 'Available exceptions' block: amount left, or None if 'Unavailable'."""
+    start = text.find("Available exceptions")
+    block = text[start:text.find("cap reference", start)] if start >= 0 else ""
+    out = {"team": abbr}
+    for col, label in [("mle_remaining", r"\|\s*Mid-level exception"),           # capital M = the team's MLE
+                       ("room_mle_remaining", r"Room mid-level exception"),
+                       ("bae_remaining", r"Bi-annual exception")]:              # lowercase = team block, not league table
+        m = re.search(label + r"[\s|]*(\$[\d,]+|Unavailable)", block)
+        out[col] = money(m.group(1)) if m and m.group(1).startswith("$") else None
+    out["exceptions_found"] = bool(block)
+    return out
 
 
 def apply_overrides(df):
@@ -153,10 +167,11 @@ def main():
     os.makedirs(RAW, exist_ok=True)
     robots = urllib.robotparser.RobotFileParser("https://www.shamsports.com/robots.txt")
     robots.read()
-    cons, holds, totals, unknown = [], [], [], []
+    cons, holds, totals, unknown, excs = [], [], [], [], []
     for abbr, slug in TEAMS.items():
         html, how = get_page(abbr, slug, robots)
-        c, h, page_total, unk = parse_team(abbr, html)
+        c, h, page_total, unk, exc = parse_team(abbr, html)
+        excs.append(exc)
         cons.append(c)
         holds.append(h)
         unknown += unk
@@ -169,6 +184,8 @@ def main():
     df.to_parquet(os.path.join(OUT, "contracts_all.parquet"), index=False)
     pd.concat([h for h in holds if not h.empty], ignore_index=True).astype(str).to_parquet(
         os.path.join(OUT, "cap_holds_all.parquet"), index=False)
+    ex = pd.DataFrame(excs)
+    ex.to_parquet(os.path.join(OUT, "team_exceptions.parquet"), index=False)
     tot = pd.DataFrame(totals)
     tot.to_parquet(os.path.join(OUT, "page_totals.parquet"), index=False)
 
@@ -183,6 +200,8 @@ def main():
         print(chk[chk["diff"].abs() > 1].to_string(index=False))
     print(f"\ncontract types: {df.drop_duplicates(['team', 'player_name'])['contract_type'].value_counts().to_dict()}")
     print(f"options found: {df['option'].replace('', None).dropna().value_counts().to_dict()}")
+    print(f"exceptions block found for {ex['exceptions_found'].sum()}/30 teams; "
+          f"MLE money left: {ex['mle_remaining'].notna().sum()} teams, BAE left: {ex['bae_remaining'].notna().sum()} teams")
     part = df[df["guaranteed"] < df["salary"]]
     print(f"not fully guaranteed: {len(part)} contract-seasons "
           f"(${(part['salary'] - part['guaranteed']).sum() / 1e6:,.1f}M could still come off the books)")
