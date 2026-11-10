@@ -1,0 +1,73 @@
+{
+  "target": "years 1-3 box-score impact, shrunk toward replacement (-2) with 500 pseudo-possessions",
+  "train_drafts": "2010-2025",
+  "ridge_alpha": 194.14919457438816,
+  "features": [
+    "bpm",
+    "obpm",
+    "dbpm",
+    "usg",
+    "ts",
+    "orb_pct",
+    "drb_pct",
+    "ast_pct",
+    "tov_pct",
+    "blk_pct",
+    "stl_pct",
+    "ftr",
+    "fg3a_rate",
+    "fg3_pct",
+    "ft_pct",
+    "height_in",
+    "age_at_draft",
+    "power_conf",
+    "min_pct",
+    "rec_score",
+    "unranked"
+  ],
+  "validation": {
+    "players": 759,
+    "draft_classes": 16,
+    "chosen_model": "ridge",
+    "results": {
+      "ridge": {
+        "r": 0.399,
+        "mae": 0.644,
+        "rank_within_class": 0.38
+      },
+      "boosting": {
+        "r": 0.318,
+        "mae": 0.704,
+        "rank_within_class": 0.294
+      },
+      "draft_order": {
+        "r": 0.207,
+        "mae": 0.733,
+        "rank_within_class": 0.287
+      }
+    }
+  },
+  "standardized_coefficients": {
+    "stl_pct": 0.146,
+    "bpm": 0.109,
+    "blk_pct": 0.1,
+    "fg3_pct": -0.091,
+    "drb_pct": 0.086,
+    "usg": -0.085,
+    "tov_pct": -0.078,
+    "dbpm": 0.077,
+    "ft_pct": 0.07,
+    "obpm": 0.063,
+    "unranked": 0.048,
+    "ast_pct": 0.043,
+    "age_at_draft": -0.043,
+    "min_pct": 0.038,
+    "fg3a_rate": -0.036,
+    "ts": 0.035,
+    "orb_pct": 0.026,
+    "power_conf": -0.012,
+    "rec_score": -0.008,
+    "height_in": 0.005,
+    "ftr": 0.001
+  }
+}

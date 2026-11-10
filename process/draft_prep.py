@@ -34,6 +34,8 @@ COLS = {"c0": "player", "c1": "school", "c2": "conf", "c3": "gp", "c4": "min_pct
 TEXT = {"player", "school", "conf", "cls", "height", "birthdate"}
 POWER = {"ACC", "B10", "B12", "SEC", "BE", "P12"}
 SHRINK_POSS, SHRINK_ATT = 1000, 200
+REPLACEMENT = -2.0       # impact of a replacement-level player (a minimum-contract fill-in)
+REPL_POSS = 500          # pseudo-possessions at replacement level added to every draftee's outcome
 
 
 def norm(name):
@@ -132,17 +134,39 @@ def main():
     train = pd.DataFrame(rows)
 
     feats, o_coef, d_coef = box_coefs()
-    outcomes = []
-    for y in sorted(train["draft_year"].unique()):
-        season = f"{y}-{str(y + 1)[2:]}"
-        if os.path.exists(os.path.join(D, "nba", f"season={season}", "nba_totals.parquet")):
-            o = nba_impact(season, feats, o_coef, d_coef)
-            o["rookie_season"] = season
-            outcomes.append(o)
-    out = pd.concat(outcomes).rename(columns={"PLAYER_ID": "nba_id", "MIN": "rookie_min",
-                                              "POSS": "rookie_poss", "GP": "rookie_gp"})
-    train["rookie_season"] = train["draft_year"].map(lambda y: f"{y}-{str(y + 1)[2:]}")
-    train = train.merge(out, on=["nba_id", "rookie_season"], how="left")
+    seasons = sorted(os.path.basename(p).split("=")[1] for p in glob.glob(os.path.join(D, "nba", "season=*")))
+    impact = []
+    for s in seasons:
+        o = nba_impact(s, feats, o_coef, d_coef)
+        o["season"] = s
+        impact.append(o)
+    impact = pd.concat(impact).rename(columns={"PLAYER_ID": "nba_id"})
+
+    def season_label(y):
+        return f"{y}-{str(y + 1)[2:]}"
+
+    # Years 1, 2 and 3 after the draft (whatever exists so far)
+    for k in (1, 2, 3):
+        lab = train["draft_year"].map(lambda y, k=k: season_label(y + k - 1))
+        part = impact.rename(columns={"season": f"y{k}_season", "rookie_impact": f"y{k}_impact",
+                                      "POSS": f"y{k}_poss"})[["nba_id", f"y{k}_season", f"y{k}_impact", f"y{k}_poss"]]
+        train[f"y{k}_season"] = lab
+        train = train.merge(part, on=["nba_id", f"y{k}_season"], how="left")
+        train[f"y{k}_poss"] = train[f"y{k}_poss"].fillna(0)
+    # Rookie-year columns kept for the "actual so far" view
+    train["rookie_season"] = train["y1_season"]
+    train["rookie_impact"], train["rookie_poss"] = train["y1_impact"], train["y1_poss"]
+
+    # Years 1-3 outcome: possession-weighted average, pulled toward replacement level.
+    # Players who barely played (or never did) end up near replacement level instead of being dropped.
+    poss = train[["y1_poss", "y2_poss", "y3_poss"]].to_numpy()
+    imp = train[["y1_impact", "y2_impact", "y3_impact"]].fillna(0).to_numpy()
+    total = poss.sum(axis=1)
+    train["poss_3yr"] = total
+    train["seasons_played"] = (poss > 0).sum(axis=1)
+    train["impact_3yr"] = np.where(total > 0, (imp * poss).sum(axis=1) / np.where(total > 0, total, 1), np.nan)
+    train["target_3yr"] = ((imp * poss).sum(axis=1) + REPLACEMENT * REPL_POSS) / (total + REPL_POSS)
+    train["target_weight"] = total + REPL_POSS
     train.to_parquet(os.path.join(D, "training.parquet"), index=False)
 
     # ---------- summary ----------
@@ -151,19 +175,19 @@ def main():
     print(f"drafted college players since 2010: {total}, matched: {len(train)} ({len(train) / total:.1%})")
     assert train["nba_id"].is_unique, "a player appears more than once"
     print(f"  match method: {train['match'].value_counts().to_dict()}")
-    print(f"  with a rookie NBA season: {train['rookie_impact'].notna().sum()}")
+    print(f"  played at least one NBA possession in years 1-3: {(train['poss_3yr'] > 0).sum()}")
     if unmatched:
         print(f"  unmatched ({len(unmatched)}), first 10:")
         for u in unmatched[:10]:
             print(f"    {u}")
-    print("\nbest rookie seasons (min 1,000 possessions):")
-    best = train[train["rookie_poss"] >= 1000].sort_values("rookie_impact", ascending=False)
-    print(best[["draft_year", "overall_pick", "nba_name", "school", "age_at_draft", "bpm",
-                "rookie_min", "rookie_impact"]].head(10).round(2).to_string(index=False))
+    print("\nbest years 1-3 (drafts through 2023, so all three seasons exist):")
+    best = train[train["draft_year"] <= 2023].sort_values("target_3yr", ascending=False)
+    print(best[["draft_year", "overall_pick", "nba_name", "school", "age_at_draft", "poss_3yr",
+                "target_3yr"]].head(12).round(2).to_string(index=False))
     print("\ncheck, a few known players:")
     known = train[train["nba_name"].isin(["Zion Williamson", "Ja Morant", "Paolo Banchero", "Cooper Flagg"])]
-    print(known[["draft_year", "overall_pick", "nba_name", "match", "age_at_draft", "height_in", "bpm",
-                 "rookie_impact"]].round(2).to_string(index=False))
+    print(known[["draft_year", "overall_pick", "nba_name", "seasons_played", "poss_3yr", "rookie_impact",
+                 "target_3yr"]].round(2).to_string(index=False))
 
 
 if __name__ == "__main__":
