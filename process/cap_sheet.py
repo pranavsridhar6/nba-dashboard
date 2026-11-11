@@ -43,15 +43,33 @@ def m(v):
 
 
 def attach_ids(df):
+    """NBA player ids: exact name first, then same team + last name + first initial
+    (spelling differences like Dominic / Dominick Barlow)."""
     frames = []
     for s in ("2025-26", CURRENT_SEASON):
         p = table_path("league/player_box", "player_box.parquet", s)
         if os.path.exists(p):
-            frames.append(pd.read_parquet(p, columns=["player_id", "player_name"]))
-    lookup = pd.concat(frames).drop_duplicates("player_id", keep="last")
+            frames.append(pd.read_parquet(p, columns=["player_id", "player_name", "team"]))
+    box = pd.concat(frames)
+    lookup = box.drop_duplicates("player_id", keep="last")
     by_name = lookup.assign(k=lookup["player_name"].map(norm)).groupby("k")["player_id"].agg(set)
-    df["player_id"] = df["player_name"].map(norm).map(
-        lambda k: next(iter(by_name[k])) if k in by_name and len(by_name[k]) == 1 else None)
+
+    def last_initial(n):
+        parts = re.sub(r"\b(Jr|Sr|II|III|IV)\b\.?", "", str(n)).split()
+        return (norm(parts[-1]), norm(parts[0])[:1]) if parts else ("", "")
+
+    by_team = {}
+    for r in box.drop_duplicates(["team", "player_id"]).itertuples(index=False):
+        by_team.setdefault((r.team,) + last_initial(r.player_name), set()).add(r.player_id)
+
+    def find(name, team):
+        k = norm(name)
+        if k in by_name and len(by_name[k]) == 1:
+            return next(iter(by_name[k]))
+        ids = by_team.get((team,) + last_initial(name), set())
+        return next(iter(ids)) if len(ids) == 1 else None
+
+    df["player_id"] = [find(n, t) for n, t in zip(df["player_name"], df["team"])]
     return df
 
 

@@ -118,6 +118,9 @@ def parse_team(abbr, html):
                 notes = nxt[len(name) + 1:].strip()
         seasons = [season(c) for c in seas_cols]
         opt, guar, ctype, unk = parse_notes(notes, seasons)
+        for badge, btype in (("Two-way", "two_way"), ("Exhibit 10", "exhibit_10")):
+            if name.endswith(badge):                       # label shown next to the name on the page
+                name, ctype = name[: -len(badge)].strip(), btype
         unknown += unk
         for c in seas_cols:
             sal = money(r[c])
