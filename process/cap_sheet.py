@@ -39,7 +39,7 @@ def norm(name):
 
 
 def m(v):
-    return f"${v / 1e6:,.3f}M"
+    return f"${v / 1e6:,.1f}M"
 
 
 def attach_ids(df):
