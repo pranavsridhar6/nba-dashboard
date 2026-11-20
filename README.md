@@ -2,7 +2,9 @@
 
 A Power BI dashboard built for the questions an NBA front office asks: who's winning and why, what the cap sheet allows, which players actually move the scoreboard, which lineups work, and which draft prospects will translate. It runs on public data refreshed by a one-click Python pipeline.
 
-![League Overview](screenshots/01_league_overview.png)
+**▶ [Watch the 3-minute demo](https://www.youtube.com/watch?v=mWVBEfuHBQI)**
+
+[![Demo video](screenshots/01_league_overview.png)](https://www.youtube.com/watch?v=mWVBEfuHBQI)
 
 **Case study:** [$57.7M vs $9.0M on the same roster](case_study.md). Jaylen Brown vs Dean Wade, impact per dollar.
 
