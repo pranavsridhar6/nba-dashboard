@@ -32,42 +32,42 @@
     "results": {
       "ridge": {
         "r": 0.399,
-        "mae": 0.644,
-        "rank_within_class": 0.38
+        "mae": 0.64,
+        "rank_within_class": 0.379
       },
       "boosting": {
-        "r": 0.318,
-        "mae": 0.704,
-        "rank_within_class": 0.294
+        "r": 0.326,
+        "mae": 0.694,
+        "rank_within_class": 0.301
       },
       "draft_order": {
-        "r": 0.207,
-        "mae": 0.733,
-        "rank_within_class": 0.287
+        "r": 0.211,
+        "mae": 0.729,
+        "rank_within_class": 0.288
       }
     }
   },
   "standardized_coefficients": {
-    "stl_pct": 0.146,
+    "stl_pct": 0.143,
     "bpm": 0.109,
-    "blk_pct": 0.1,
-    "fg3_pct": -0.091,
-    "drb_pct": 0.086,
-    "usg": -0.085,
-    "tov_pct": -0.078,
+    "blk_pct": 0.098,
+    "drb_pct": 0.088,
+    "fg3_pct": -0.088,
+    "usg": -0.087,
+    "tov_pct": -0.08,
     "dbpm": 0.077,
     "ft_pct": 0.07,
-    "obpm": 0.063,
-    "unranked": 0.048,
-    "ast_pct": 0.043,
+    "obpm": 0.065,
+    "unranked": 0.05,
+    "ast_pct": 0.044,
     "age_at_draft": -0.043,
     "min_pct": 0.038,
     "fg3a_rate": -0.036,
-    "ts": 0.035,
-    "orb_pct": 0.026,
-    "power_conf": -0.012,
-    "rec_score": -0.008,
-    "height_in": 0.005,
-    "ftr": 0.001
+    "ts": 0.034,
+    "orb_pct": 0.024,
+    "power_conf": -0.013,
+    "rec_score": -0.007,
+    "height_in": 0.006,
+    "ftr": -0.003
   }
 }
