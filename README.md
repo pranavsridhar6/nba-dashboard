@@ -58,7 +58,7 @@ pip install -r requirements.txt
 refresh.bat
 ```
 
-Then open `nba_dashboard.pbix` in Power BI Desktop and click **Home → Refresh**.
+Then open `powerbi/nba_dashboard.pbix` in Power BI Desktop and click **Home → Refresh**.
 
 ## Limits
 
