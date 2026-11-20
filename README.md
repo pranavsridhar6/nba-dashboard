@@ -26,6 +26,7 @@ A Power BI dashboard built for the questions an NBA front office asks: who's win
 | ![History](screenshots/02_history.png) | ![Game](screenshots/03_game.png) |
 | ![Salary Cap](screenshots/04_salary_cap.png) | ![Player Metrics](screenshots/05_player_metrics.png) |
 | ![Lineups](screenshots/06_lineups.png) | ![Draft Translator](screenshots/07_draft_translator.png) |
+| ![Methodology](screenshots/08_methodology.png) | |
 
 ## How it works
 
@@ -49,7 +50,7 @@ Barttorvik ────┘                                                │
 ## Run it
 
 ```bat
-git clone https://github.com/<pranavsridhar6>/nba-dashboard.git
+git clone https://github.com/pranavsridhar6/nba-dashboard.git
 cd nba-dashboard
 python -m venv venv
 venv\Scripts\activate
