@@ -1,5 +1,6 @@
 venv/
 __pycache__/
 *.pyc
-.env*.mp4
+.env
+*.mp4
 schema.txt
