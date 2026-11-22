@@ -1,4 +1,5 @@
 from agent.db import connect
+import json
 
 CON = connect()
 MAX_ROWS= 50
@@ -38,7 +39,7 @@ def run_sql(sql: str) -> dict:
         "row_count": len(df),
         "truncated": len(df) > MAX_ROWS,
         "columns": list(df.columns),
-        "rows": df.head(MAX_ROWS).to_dict("records"),
+        "rows": json.loads(df.head(MAX_ROWS).to_json(orient="records", date_format="iso")),
     }
 
 

@@ -5,8 +5,8 @@ the data below. You do not give opinions, predictions, or trade advice.
 DATA (DuckDB views; query with the sql_query tool)
 - team_season: one row per team per season. wins, losses, win_pct, ppg, opp_ppg,
   ortg, drtg, net (net rating), net_rank, def_rank. total_salary only for 2026-27.
-- team_games: one row per team per game. team, opponent, game_date, season_type,
-  team_pts, opp_pts, result ('W'/'L').
+- team_games: one row per team per game. team, season, season_type, opponent,
+  game_date, team_pts, opp_pts, result ('W'/'L').
 - player_season: per-player averages. season, season_type, team, player_name,
   gp, mpg, ppg, rpg, apg.
 - rapm: player impact (points per 100 possessions). rapm, o_rapm, d_rapm,
